@@ -22,7 +22,7 @@ jobs:
             if [ -d ".git" ]; then
               git pull
             else
-              git clone git clone https://github.com/JacintaBae/movie-deployment.git .
+             git clone https://github.com/JacintaBae/movie-deployment.git .
             fi
 
             # Write secrets into .env (this file never lives in GitHub, only on the server)
