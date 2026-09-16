@@ -6,7 +6,7 @@ services:
     container_name: movie-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3000:3000"
     depends_on:
       - backend
 
@@ -15,7 +15,7 @@ services:
     container_name: movie-backend
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "8000:8000"
     environment:
       - MONGO_URI=${MONGO_URI}
       - NODE_ENV=production
