@@ -1,0 +1,40 @@
+name: Deploy Docker Compose to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into EC2 and update deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mkdir -p ~/deployment
+            cd ~/deployment
+
+            # Pull the latest docker-compose.yml from this repo
+            if [ -d ".git" ]; then
+              git pull
+            else
+              git clone https://github.com/yourusername/movie-deployment.git .
+            fi
+
+            # Write secrets into .env (this file never lives in GitHub, only on the server)
+            cat > .env << EOF
+            AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            MONGO_URI=${{ secrets.MONGO_URI }}
+            EOF
+
+            # Log in to ECR so Docker Compose can pull private images
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+            # Restart everything with the latest images and config
+            docker compose pull
+            docker compose up -d
